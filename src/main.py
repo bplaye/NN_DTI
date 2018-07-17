@@ -1,19 +1,19 @@
 import argparse
 import eval_procedure.fold as evalf
-import eval_procedure.cross_validation as evalc
+# import eval_procedure.cross_validation as evalc
 import eval_procedure.nested_cross_validation as evaln
 import param_selection.gridsearch as selection
-from model.model_tf import Model_tf_ST, Model_tf_MT
+from model.model_tf import Model_tf_ST
 import pickle
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    list_dataset = ['DrugBank_S0']
+    list_dataset = ['DB_S']
     list_architecture = ['ConvModel']
     list_prot_dataset = []
     list_mol_dataset = []
-    dict_param = {'dataset': 'DrugBank_S0',
+    dict_param = {'dataset': 'DB_S',
                   'stream_type': 'TFrecords',
                   ## learning procedure parameters
                   'batch_size': 5, 'init_lr': 0.0001, 'decay_steps': 1, 'lr_decay_factor': 0.99,
@@ -22,7 +22,7 @@ if __name__ == "__main__":
                   ## prot embedding network architecture parameters
                   'P_architecture': 'ConvModel',
                   # conv
-                  'P_nb_filters': [20, 10], 'P_filter_size': 6, 'P_conv_strides': 3,
+                  'P_nb_filters': [5, 10], 'P_filter_size': 6, 'P_conv_strides': 3,
                   'P_pooling_size': 1, 'P_pooling_strides': 1,
                   # reg
                   'P_l2_reg_coef': 0.01,
@@ -30,14 +30,17 @@ if __name__ == "__main__":
                   ## mol embedding network architecture parameters
                   'M_architecture': 'ConvModel',
                   # conv
-                  'M_nb_emb_layers': 3, 'M_hidden_units_emb': 100,
-                  'M_hidden_units_up': 100,
+                  # 'M_nb_emb_layers': 3, 'M_hidden_units_emb': 100,
+                  # 'M_hidden_units_up': 100,
+                  'M_nb_emb_layers': 1, 'M_hidden_units_emb': 10,
+                  'M_hidden_units_up': 10,
                   # reg
                   'M_l2_reg_coef': 0.01,
 
                   ## prediction network architecture parameters
                   # seq tasks
-                  'nb_fully_con_units': [1000, 100], 'dropout_keep_prob': 0.8,
+                  # 'nb_fully_con_units': [1000, 100], 'dropout_keep_prob': 0.8,
+                  'nb_fully_con_units': [100], 'dropout_keep_prob': 0.8,
 
                   'balance_class': False,
                   'summary': False,

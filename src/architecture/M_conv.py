@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-def update_graph_emb(X):
+def update_graph_emb(X, lay, model, hidden_units_emb, attribute_size):
     # graph_emb += [sigmoid(sum_{atom=a}(W^i_a*features_a)+b^i)]_{i=1:size of graph_emb}
     with tf.variable_scope('Emb_Conv' + str(lay), reuse=False):
         X = tf.layers.conv2d(X, hidden_units_emb,
@@ -13,7 +13,7 @@ def update_graph_emb(X):
                              bias_initializer=tf.constant_initializer(0.1),
                              bias_regularizer=tf.contrib.layers.l2_regularizer(model.Mregph),
                              padding='same')
-        if model.summary:
+        if model.summary_bool:
             tf.contrib.layers.summarize_tensor(X)
             tf.contrib.layers.summarize_activation(X)
         X = tf.transpose(X, perm=[0, 1, 3, 2])
@@ -28,7 +28,7 @@ def update_atom_att(X, A, X_b, lay, atom_size, hidden_units_up, model):
       else:
         atom_features_size = hidden_units_up
 
-      if self.use_bond_att is True:
+      if model.use_bond_att is True:
         nodes_tensor = tf.transpose(X, perm=[0, 3, 1, 2])
         nodes_tensor = tf.transpose(tf.matmul(A, nodes_tensor), perm=[0, 2, 3, 1])
         X = tf.concat(axis=2, values=[nodes_tensor, X_b])
@@ -45,7 +45,7 @@ def update_atom_att(X, A, X_b, lay, atom_size, hidden_units_up, model):
                            bias_initializer=tf.constant_initializer(0.1),
                            bias_regularizer=tf.contrib.layers.l2_regularizer(model.Mregph),
                            padding='same')
-      if model.summary:
+      if model.summary_bool:
           tf.contrib.layers.summarize_tensor(X)
           tf.contrib.layers.summarize_activation(X)
       X = tf.transpose(X, perm=[0, 1, 3, 2])
@@ -53,12 +53,12 @@ def update_atom_att(X, A, X_b, lay, atom_size, hidden_units_up, model):
 
 
 def conv_emb(model):
-    n_atoms, nb_layers = model.nb_MaxAtoms, model.nb_layers
-    atom_size, edge_size = model.nb_AtomFeature, model.nb_BondFeature
-    hidden_units_emb = atom_size if model.hidden_units_emb is None else \
-        model.hidden_units_emb
-    hidden_units_up = atom_size if model.hidden_units_up is None else \
-        model.hidden_units_up
+    n_atoms, nb_layers = model.nb_MaxAtoms, model.M_nb_emb_layers
+    atom_size, edge_size = model.nb_AtomFeatures, model.nb_BondFeatures
+    hidden_units_emb = atom_size if model.M_hidden_units_emb is None else \
+        model.M_hidden_units_emb
+    hidden_units_up = atom_size if model.M_hidden_units_up is None else \
+        model.M_hidden_units_up
 
     graph_emb_list = []
 
@@ -69,11 +69,16 @@ def conv_emb(model):
     X_a = model.X_a # [batch_size, N_atoms_max, p_fea_atoms, n_channel=1]
 
     # Increment graph embedding
-    emb = update_graph_emb(X_a, model, hidden_units_emb, atom_size)
+    emb = update_graph_emb(X_a, 0, model, hidden_units_emb, atom_size)
     graph_emb_list.append(emb)
 
-    for lay in range(1, self.nb_layers + 1):
-      X_a = self.update_atom_att(X_a,  A, X_b, lay, atom_size, hidden_units_up, model)
+    for lay in range(1, nb_layers + 1):
+      X_a = update_atom_att(X_a, A, X_b, lay, atom_size, hidden_units_up, model)
 
-      emb = update_graph_emb(X_a, model, hidden_units_emb, hidden_units_up)
+      emb = update_graph_emb(X_a, lay, model, hidden_units_emb, hidden_units_up)
       graph_emb_list.append(emb)
+
+    with tf.variable_scope('mol_embedding'):
+        emb_size = hidden_units_emb
+        emb = tf.reduce_sum(tf.add_n(graph_emb_list), axis=[1, 3]),
+    return emb, emb_size

@@ -1,10 +1,10 @@
 import numpy as np
 from sklearn import metrics
 
-LIST_TASKS = ['DrugBank_S0']
+LIST_TASKS = ['DB_S']
 
 LIST_MULTICLF_TASKS = []
-LIST_CLF_TASKS = ['DrugBank_S0']
+LIST_CLF_TASKS = ['DB_S']
 LIST_REGR_TASKS = []
 
 
@@ -24,9 +24,12 @@ def get_perf(Y_test, test_pred, dataset):
     auc = metrics.roc_auc_score(Y_test, test_pred, average=None)
     pr = metrics.average_precision_score(Y_test, test_pred, average=None)
 
-    test_pred_ = np.asarray(test_pred, dtype=int)
-    accuracy = np.asarray([metrics.accuracy_score(Y_test[:, ind], test_pred_[:, ind])
-                           for ind in range(test_pred_.shape[1])])
+    test_pred_ = np.round(test_pred)
+    if len(test_pred_.shape) > 1:
+        accuracy = np.asarray([metrics.accuracy_score(Y_test[:, ind], test_pred_[:, ind])
+                               for ind in range(test_pred_.shape[1])])
+    else:
+        accuracy = metrics.accuracy_score(Y_test, test_pred_)
     return auc, pr, accuracy
 
   elif dataset in LIST_MULTICLF_TASKS:
@@ -51,11 +54,8 @@ def get_path(dataset):
 
 
 def get_test_components_TFrecords(dataset, n, nfold=5, stream_type='TFrecords'):
-    if stream_type == 'TFrecords':
-        path = get_path(dataset) + dataset + '_' + str(nfold) + 'fold_' + str(n)
-    elif stream_type == 'ClusterTFrecords':
-        path = get_path(dataset) + dataset + '_Cluster' + str(nfold) + 'fold_' + str(n)
-    return [path + '.TFrecord'], np.load(path + '_Y.npy')
+    path = get_path(dataset) + dataset + '_' + str(nfold) + 'fold_' + str(n)
+    return [path + '.TFrecord'], np.load(path + '_y.npy')
 
 
 def get_train_components_TFrecords(dataset, list_ind, nfold=5, class_weight=False,
@@ -67,12 +67,9 @@ def get_train_components_TFrecords(dataset, list_ind, nfold=5, class_weight=Fals
     n_tr_steps = 0
     train_files = []
     for i in list_ind:
-        if stream_type == 'TFrecords':
-            path = get_path(dataset) + dataset + '_' + str(nfold) + 'fold_' + str(i)
-        elif stream_type == 'ClusterTFrecords':
-            path = get_path(dataset) + dataset + '_Cluster' + str(nfold) + 'fold_' + str(i)
+        path = get_path(dataset) + dataset + '_' + str(nfold) + 'fold_' + str(i)
         train_files.append(path + balanced + '.TFrecord')
-        n_tr_steps += (np.load(path + balanced + '_Y.npy')).shape[0]
+        n_tr_steps += (np.load(path + balanced + '_y.npy')).shape[0]
 
     return train_files, n_tr_steps
 

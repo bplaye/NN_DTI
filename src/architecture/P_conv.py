@@ -27,7 +27,7 @@ def conv_emb(model):
             if model.summary_bool:
                 tf.contrib.layers.summarize_tensor(x)
                 tf.contrib.layers.summarize_activation(x)
-            model.visualize_conv.append(x)
+            model.P_visualize_conv.append(x)
         # No pooling !
         # with tf.variable_scope('pool_layer_' + str(i + 1)):
         #     x = tf.layers.max_pooling2d(inputs=x,
@@ -38,7 +38,7 @@ def conv_emb(model):
         #     model.visualize_conv.append(x)
             x = tf.transpose(x, perm=[0, 1, 3, 2])
 
-    with tf.variable_scope('embedding'):
-        emb_size = tf.cast(seq_size * model.nb_filters[-1], tf.int32)
+    with tf.variable_scope('prot_embedding'):
+        emb_size = seq_size * model.P_nb_filters[-1]
 
     return x, emb_size

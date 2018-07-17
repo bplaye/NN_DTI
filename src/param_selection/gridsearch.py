@@ -14,9 +14,8 @@ def str_model(param_dict):
                 'lr_decay_factor', 'early_stopping_counter', 'nb_epochs',
                 'nb_fully_con_units', 'dropout_keep_prob', 'balance_class', 'stream_type']
     if param_dict['M_architecture'] == 'ConvModel':
-        list_cle += ['M_nb_filters', 'M_filter_size', 'M_l2_reg_coef']
-        if param_dict['M_conv_strides'] != 1:
-            list_cle.append('M_conv_strides')
+        list_cle += ['M_nb_emb_layers', 'M_hidden_units_emb', 'M_hidden_units_up',
+                     'M_l2_reg_coef']
 
     if param_dict['P_architecture'] == 'ConvModel':
         list_cle += ['P_nb_filters', 'P_filter_size', 'P_l2_reg_coef']

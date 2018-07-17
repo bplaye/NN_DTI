@@ -2,9 +2,16 @@ import tensorflow as tf
 
 
 def pred(model, itask=None):
-    emb, emb_size, nb_outputs, batch_size_placeholder = \
-        tf.concat(model.P_emb, model.M_emb), model.P_emb_size + model.M_emb_size, \
-        model.nb_outputs, model.batch_size_placeholder
+    emb_size = tf.cast(model.P_emb_size + model.M_emb_size, dtype=tf.int32)
+    P_emb_size = tf.cast(model.P_emb_size, dtype=tf.int32)
+    M_emb_size = tf.cast(model.M_emb_size, dtype=tf.int32)
+
+    nb_outputs, batch_size_placeholder = model.nb_outputs, model.batch_size_placeholder
+    # nb_outputs = 1 if nb_outputs == 2 else nb_outputs
+    P_emb = tf.reshape(model.P_emb, tf.stack([model.batch_size_placeholder, P_emb_size]))
+    M_emb = tf.reshape(model.M_emb, tf.stack([model.batch_size_placeholder, M_emb_size]))
+    emb = tf.reshape(tf.concat([P_emb, M_emb], axis=1),
+                     tf.stack([model.batch_size_placeholder, emb_size]))
     X = emb
 
     # logits of size [batch size, n_classes]
@@ -19,7 +26,7 @@ def pred(model, itask=None):
                 tf.contrib.layers.summarize_tensor(X)
 
     with tf.variable_scope('y_conv'):
-        y = tf.layers.dense(X, units=nb_outputs)
+        y = tf.layers.dense(X, units=nb_outputs, activation=None)
         if model.summary_bool:
             tf.contrib.layers.summarize_tensor(y)
         logits = y
