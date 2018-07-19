@@ -42,6 +42,8 @@ if __name__ == "__main__":
                   # 'nb_fully_con_units': [1000, 100], 'dropout_keep_prob': 0.8,
                   'nb_fully_con_units': [100], 'dropout_keep_prob': 0.8,
 
+                  #'MTtype': ['ATC', 'bioassays'],
+
                   'balance_class': False,
                   'summary': False,
                   }
